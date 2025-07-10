@@ -43,10 +43,11 @@ CREATE TABLE IF NOT EXISTS devices (
 
 CREATE TABLE IF NOT EXISTS checkins (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
-  name TEXT,
-  room_id INTEGER,
-  device_uuid TEXT,
-  created_at TEXT
+  name TEXT NOT NULL,
+  type TEXT NOT NULL,
+  room_id INTEGER NOT NULL,
+  device_uuid TEXT NOT NULL,
+  created_at TEXT NOT NULL
 );
 `);
 

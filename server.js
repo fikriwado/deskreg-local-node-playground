@@ -37,21 +37,21 @@ app.get("/devices", (req, res) => {
 // GET: Checkins
 app.get("/checkins", (req, res) => {
   const rows = db
-    .prepare("SELECT * FROM checkins ORDER BY created_at DESC")
+    .prepare("SELECT * FROM checkins ORDER BY created_at ASC")
     .all();
   res.json(rows);
 });
 
 // POST: Checkin
 app.post("/checkin", (req, res) => {
-  const { name, room_id, device_uuid } = req.body;
-  const created_at = new Date().toISOString();
+  const device_uuid = req.header("X-Device-UUID");
+  const { name, type, room_id, created_at } = req.body;
 
   db.prepare(
-    `INSERT INTO checkins (name, room_id, device_uuid, created_at) VALUES (?, ?, ?, ?)`
-  ).run(name, room_id, device_uuid, created_at);
+    `INSERT INTO checkins (name, type, room_id, device_uuid, created_at) VALUES (?, ?, ?, ?, ?)`
+  ).run(name, type, room_id, device_uuid, created_at);
 
-  const data = { name, room_id, device_uuid, created_at };
+  const data = { name, type, room_id, device_uuid, created_at };
   io.emit("checkin:new", data);
 
   res.json({ success: true });

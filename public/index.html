@@ -133,7 +133,8 @@
             <td>${new Date(data.created_at).toLocaleString()}</td>
         `;
 
-        tbody.prepend(tr);
+        // tbody.append(tr);
+        tbody.insertBefore(tr, tbody.firstChild);
       }
     </script>
   </body>
