@@ -3,7 +3,7 @@
     {
       "id": 1,
       "username": "admin",
-      "password": "$2a$10$hashed..."
+      "password": "$2a$10$hash-placeholder"
     }
   ],
   "rooms": [

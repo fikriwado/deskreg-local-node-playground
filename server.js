@@ -1,43 +1,71 @@
 const express = require("express");
-const sqlite3 = require("sqlite3").verbose();
+const http = require("http");
+const socketio = require("socket.io");
 const path = require("path");
+const Database = require("better-sqlite3");
+
 const app = express();
-const port = 3000;
+const server = http.createServer(app);
+const io = socketio(server);
 
-const db = new sqlite3.Database("db.sqlite");
+const db = new Database(path.join(__dirname, "db/database.sqlite"));
 
-// Setup DB
-db.run(`CREATE TABLE IF NOT EXISTS checkins (
-  id INTEGER PRIMARY KEY AUTOINCREMENT,
-  participant_id TEXT,
-  status TEXT,
-  device_id TEXT,
-  timestamp TEXT
-)`);
-
+// Middleware
 app.use(express.json());
-app.use(express.static(path.join(__dirname, "public")));
-app.use(express.urlencoded({ extended: true }));
+app.use(express.static("public"));
 
-// API untuk menerima check-in
-app.post("/sync-checkin", (req, res) => {
-  const { participant_id, status, device_id, timestamp } = req.body;
-  const sql = `INSERT INTO checkins (participant_id, status, device_id, timestamp)
-               VALUES (?, ?, ?, ?)`;
-  db.run(sql, [participant_id, status, device_id, timestamp], (err) => {
-    if (err) return res.status(500).json({ error: err.message });
-    res.json({ success: true });
-  });
+// ──────────────── API ENDPOINTS ────────────────
+
+// GET: Users
+app.get("/users", (req, res) => {
+  const rows = db.prepare("SELECT id, username FROM users").all();
+  res.json(rows);
 });
 
-// API untuk get semua check-in
+// GET: Rooms
+app.get("/rooms", (req, res) => {
+  const rows = db.prepare("SELECT * FROM rooms").all();
+  res.json(rows);
+});
+
+// GET: Devices
+app.get("/devices", (req, res) => {
+  const rows = db.prepare("SELECT * FROM devices").all();
+  res.json(rows);
+});
+
+// GET: Checkins
 app.get("/checkins", (req, res) => {
-  db.all("SELECT * FROM checkins ORDER BY timestamp DESC", [], (err, rows) => {
-    if (err) return res.status(500).json({ error: err.message });
-    res.json(rows);
-  });
+  const rows = db
+    .prepare("SELECT * FROM checkins ORDER BY created_at DESC")
+    .all();
+  res.json(rows);
 });
 
-app.listen(port, () => {
-  console.log(`Local check-in server listening at http://localhost:${port}`);
+// POST: Checkin
+app.post("/checkin", (req, res) => {
+  const { name, room_id, device_uuid } = req.body;
+  const created_at = new Date().toISOString();
+
+  db.prepare(
+    `INSERT INTO checkins (name, room_id, device_uuid, created_at) VALUES (?, ?, ?, ?)`
+  ).run(name, room_id, device_uuid, created_at);
+
+  const data = { name, room_id, device_uuid, created_at };
+  io.emit("checkin:new", data);
+
+  res.json({ success: true });
+});
+
+// ──────────────── SOCKET.IO ────────────────
+
+io.on("connection", (socket) => {
+  console.log("🔌 Socket connected");
+});
+
+// ──────────────── START ────────────────
+
+const PORT = 3000;
+server.listen(PORT, () => {
+  console.log(`✅ Local Node running at http://localhost:${PORT}`);
 });

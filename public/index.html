@@ -1,38 +1,124 @@
 <!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <title>Dashboard Check-In</title>
-</head>
-<body>
-  <h2>Participant Check-In Dashboard</h2>
-  <table border="1" id="checkin-table">
-    <thead>
-      <tr>
-        <th>ID</th><th>Status</th><th>Device</th><th>Timestamp</th>
-      </tr>
-    </thead>
-    <tbody></tbody>
-  </table>
+<html>
+  <head>
+    <title>DeskReg POC</title>
+    <script src="/socket.io/socket.io.js"></script>
+    <style>
+      body {
+        font-family: sans-serif;
+        padding: 2rem;
+      }
+      section {
+        margin-bottom: 2rem;
+      }
+      h2 {
+        border-bottom: 1px solid #ccc;
+        padding-bottom: 0.3rem;
+      }
+      ul {
+        padding-left: 1rem;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>📋 Desk Registration POC</h1>
 
-  <script>
-    async function loadData() {
-      const res = await fetch('/checkins');
-      const data = await res.json();
-      const tbody = document.querySelector('#checkin-table tbody');
-      tbody.innerHTML = '';
-      data.forEach(row => {
-        tbody.innerHTML += `
-          <tr>
-            <td>${row.participant_id}</td>
-            <td>${row.status}</td>
-            <td>${row.device_id}</td>
-            <td>${row.timestamp}</td>
-          </tr>`;
+    <section>
+      <h2>📦 Check-in List</h2>
+      <ul id="checkins"></ul>
+    </section>
+
+    <section>
+      <h2>👤 Users</h2>
+      <ul id="users"></ul>
+    </section>
+
+    <section>
+      <h2>🏢 Rooms</h2>
+      <ul id="rooms"></ul>
+    </section>
+
+    <section>
+      <h2>💻 Devices</h2>
+      <ul id="devices"></ul>
+    </section>
+
+    <script>
+      const socket = io();
+
+      const form = document.getElementById("form");
+      const nameInput = document.getElementById("name");
+      const roomSelect = document.getElementById("room");
+      const deviceSelect = document.getElementById("device");
+      const checkinList = document.getElementById("checkins");
+
+      // Fetch and fill rooms
+      fetch("/rooms")
+        .then((res) => res.json())
+        .then((rooms) => {
+          rooms.forEach((room) => {
+            const opt = document.createElement("option");
+            opt.value = room.id;
+            opt.innerText = room.name;
+            roomSelect.appendChild(opt);
+          });
+
+          const list = document.getElementById("rooms");
+          rooms.forEach((r) => {
+            const li = document.createElement("li");
+            li.innerText = `${r.id}: ${r.name}`;
+            list.appendChild(li);
+          });
+        });
+
+      // Fetch and fill devices
+      fetch("/devices")
+        .then((res) => res.json())
+        .then((devices) => {
+          devices.forEach((dev) => {
+            const opt = document.createElement("option");
+            opt.value = dev.uuid;
+            opt.innerText = dev.name;
+            deviceSelect.appendChild(opt);
+          });
+
+          const list = document.getElementById("devices");
+          devices.forEach((d) => {
+            const li = document.createElement("li");
+            li.innerText = `${d.id}: ${d.name} (${d.uuid})`;
+            list.appendChild(li);
+          });
+        });
+
+      // Fetch and render users
+      fetch("/users")
+        .then((res) => res.json())
+        .then((users) => {
+          const list = document.getElementById("users");
+          users.forEach((u) => {
+            const li = document.createElement("li");
+            li.innerText = `${u.id}: ${u.username}`;
+            list.appendChild(li);
+          });
+        });
+
+      // Fetch checkins
+      fetch("/checkins")
+        .then((res) => res.json())
+        .then((data) => {
+          data.forEach(appendCheckin);
+        });
+
+      // Realtime update
+      socket.on("checkin:new", (data) => {
+        appendCheckin(data);
       });
-    }
-    setInterval(loadData, 1000); // Auto-refresh every 1s
-    loadData();
-  </script>
-</body>
+
+      function appendCheckin(data) {
+        const li = document.createElement("li");
+        li.innerText = `${data.name} masuk ke room ${data.room_id} via ${data.device_uuid} at ${data.created_at}`;
+        checkinList.prepend(li);
+      }
+    </script>
+  </body>
 </html>
