@@ -18,6 +18,16 @@
       ul {
         padding-left: 1rem;
       }
+      table {
+        text-align: left;
+        border-spacing: 0;
+        border-collapse: collapse;
+      }
+      td,
+      th {
+        border: 1px solid black;
+        padding: 10px;
+      }
     </style>
   </head>
   <body>
@@ -25,10 +35,21 @@
 
     <section>
       <h2>📦 Check-in List</h2>
-      <ul id="checkins"></ul>
+      <table id="checkins">
+        <thead>
+          <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Room</th>
+            <th>Device</th>
+            <th>Action Time</th>
+          </tr>
+        </thead>
+        <tbody></tbody>
+      </table>
     </section>
 
-    <section>
+    <!-- <section>
       <h2>👤 Users</h2>
       <ul id="users"></ul>
     </section>
@@ -41,7 +62,7 @@
     <section>
       <h2>💻 Devices</h2>
       <ul id="devices"></ul>
-    </section>
+    </section> -->
 
     <script>
       const socket = io();
@@ -50,57 +71,43 @@
       const nameInput = document.getElementById("name");
       const roomSelect = document.getElementById("room");
       const deviceSelect = document.getElementById("device");
-      const checkinList = document.getElementById("checkins");
+      const checkinTable = document.getElementById("checkins");
 
-      // Fetch and fill rooms
-      fetch("/rooms")
-        .then((res) => res.json())
-        .then((rooms) => {
-          rooms.forEach((room) => {
-            const opt = document.createElement("option");
-            opt.value = room.id;
-            opt.innerText = room.name;
-            roomSelect.appendChild(opt);
-          });
+      //   fetch("/rooms")
+      //     .then((res) => res.json())
+      //     .then((rooms) => {
+      //       console.log(rooms);
+      //       const list = document.getElementById("rooms");
+      //       rooms.forEach((room) => {
+      //         const li = document.createElement("li");
+      //         li.innerText = `${room.id}: ${room.name}`;
+      //         list.appendChild(li);
+      //       });
+      //     });
 
-          const list = document.getElementById("rooms");
-          rooms.forEach((r) => {
-            const li = document.createElement("li");
-            li.innerText = `${r.id}: ${r.name}`;
-            list.appendChild(li);
-          });
-        });
+      //   // Fetch and fill devices
+      //   fetch("/devices")
+      //     .then((res) => res.json())
+      //     .then((devices) => {
+      //       const list = document.getElementById("devices");
+      //       devices.forEach((device) => {
+      //         const li = document.createElement("li");
+      //         li.innerText = `${device.id}: ${device.name} (${device.uuid})`;
+      //         list.appendChild(li);
+      //       });
+      //     });
 
-      // Fetch and fill devices
-      fetch("/devices")
-        .then((res) => res.json())
-        .then((devices) => {
-          devices.forEach((dev) => {
-            const opt = document.createElement("option");
-            opt.value = dev.uuid;
-            opt.innerText = dev.name;
-            deviceSelect.appendChild(opt);
-          });
-
-          const list = document.getElementById("devices");
-          devices.forEach((d) => {
-            const li = document.createElement("li");
-            li.innerText = `${d.id}: ${d.name} (${d.uuid})`;
-            list.appendChild(li);
-          });
-        });
-
-      // Fetch and render users
-      fetch("/users")
-        .then((res) => res.json())
-        .then((users) => {
-          const list = document.getElementById("users");
-          users.forEach((u) => {
-            const li = document.createElement("li");
-            li.innerText = `${u.id}: ${u.username}`;
-            list.appendChild(li);
-          });
-        });
+      //   // Fetch and render users
+      //   fetch("/users")
+      //     .then((res) => res.json())
+      //     .then((users) => {
+      //       const list = document.getElementById("users");
+      //       users.forEach((user) => {
+      //         const li = document.createElement("li");
+      //         li.innerText = `${user.id}: ${user.username}`;
+      //         list.appendChild(li);
+      //       });
+      //     });
 
       // Fetch checkins
       fetch("/checkins")
@@ -115,9 +122,18 @@
       });
 
       function appendCheckin(data) {
-        const li = document.createElement("li");
-        li.innerText = `${data.name} masuk ke room ${data.room_id} via ${data.device_uuid} at ${data.created_at}`;
-        checkinList.prepend(li);
+        const tbody = checkinTable.querySelector("tbody");
+        const tr = document.createElement("tr");
+
+        tr.innerHTML = `
+            <td>${data.name}</td>
+            <td>${data.type ?? "-"}</td>
+            <td>${data.room_id}</td>
+            <td>${data.device_uuid}</td>
+            <td>${new Date(data.created_at).toLocaleString()}</td>
+        `;
+
+        tbody.prepend(tr);
       }
     </script>
   </body>
