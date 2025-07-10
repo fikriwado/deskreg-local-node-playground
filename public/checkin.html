@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Simulate Check-In</title>
+  </head>
+  <body>
+    <h2>Simulate Device Check-In</h2>
+    <form id="form">
+      <label>Participant ID: <input name="participant_id" required /></label
+      ><br />
+      <label>Device ID: <input name="device_id" required /></label><br />
+      <button type="submit">Check-In</button>
+    </form>
+
+    <p id="msg"></p>
+
+    <script>
+      document.getElementById("form").addEventListener("submit", async (e) => {
+        e.preventDefault();
+        const data = {
+          participant_id: e.target.participant_id.value,
+          device_id: e.target.device_id.value,
+          status: "checked_in",
+          timestamp: new Date().toISOString(),
+        };
+
+        const res = await fetch("/sync-checkin", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(data),
+        });
+
+        const result = await res.json();
+        document.getElementById("msg").textContent = result.success
+          ? "✅ Success"
+          : "❌ Failed";
+      });
+    </script>
+  </body>
+</html>

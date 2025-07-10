@@ -1,0 +1,31 @@
+{
+  "users": [
+    {
+      "id": 1,
+      "username": "admin",
+      "password": "$2a$10$hashed..."
+    }
+  ],
+  "rooms": [
+    {
+      "id": 1,
+      "name": "Main Hall"
+    },
+    {
+      "id": 2,
+      "name": "Workshop Room"
+    }
+  ],
+  "devices": [
+    {
+      "id": 1,
+      "name": "Front Desk 1",
+      "uuid": "device-uuid-123"
+    },
+    {
+      "id": 2,
+      "name": "Mobile Scanner",
+      "uuid": "device-uuid-456"
+    }
+  ]
+}
